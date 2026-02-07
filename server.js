@@ -132,6 +132,9 @@ app.get('/', (req, res) => {
                 }
                 .file-preview {
                     margin-left: 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
                 }
                 .file-preview img {
                     max-width: 100px;
@@ -142,6 +145,22 @@ app.get('/', (req, res) => {
                 }
                 .file-preview img:hover {
                     border-color: #4CAF50;
+                }
+                .copy-btn {
+                    padding: 4px 8px;
+                    background-color: #f0f0f0;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 12px;
+                }
+                .copy-btn:hover {
+                    background-color: #e0e0e0;
+                }
+                .copy-btn.copied {
+                    background-color: #d4edda;
+                    border-color: #c3e6cb;
+                    color: #155724;
                 }
                 #imageModal {
                     display: none;
@@ -294,6 +313,28 @@ app.get('/', (req, res) => {
                                     link.textContent = '下载';
                                     filePreview.appendChild(link);
                                 }
+                                
+                                // 添加复制URL按钮
+                                const copyBtn = document.createElement('button');
+                                copyBtn.className = 'copy-btn';
+                                copyBtn.textContent = '复制URL';
+                                copyBtn.onclick = function() {
+                                    const fullUrl = window.location.origin + file.url;
+                                    navigator.clipboard.writeText(fullUrl)
+                                        .then(() => {
+                                            copyBtn.textContent = '已复制!';
+                                            copyBtn.classList.add('copied');
+                                            setTimeout(() => {
+                                                copyBtn.textContent = '复制URL';
+                                                copyBtn.classList.remove('copied');
+                                            }, 2000);
+                                        })
+                                        .catch(err => {
+                                            console.error('复制失败:', err);
+                                            showMessage('复制URL失败', 'error');
+                                        });
+                                };
+                                filePreview.appendChild(copyBtn);
                                 
                                 fileItem.appendChild(fileInfo);
                                 fileItem.appendChild(filePreview);
