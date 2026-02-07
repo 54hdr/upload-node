@@ -320,20 +320,62 @@ app.get('/', (req, res) => {
                                 copyBtn.textContent = '复制URL';
                                 copyBtn.onclick = function() {
                                     const fullUrl = window.location.origin + file.url;
-                                    navigator.clipboard.writeText(fullUrl)
-                                        .then(() => {
-                                            copyBtn.textContent = '已复制!';
-                                            copyBtn.classList.add('copied');
-                                            setTimeout(() => {
-                                                copyBtn.textContent = '复制URL';
-                                                copyBtn.classList.remove('copied');
-                                            }, 2000);
-                                        })
-                                        .catch(err => {
-                                            console.error('复制失败:', err);
-                                            showMessage('复制URL失败', 'error');
-                                        });
+                                    
+                                    // 尝试使用现代的Clipboard API
+                                    if (navigator.clipboard && window.isSecureContext) {
+                                        navigator.clipboard.writeText(fullUrl)
+                                            .then(() => {
+                                                copyBtn.textContent = '已复制!';
+                                                copyBtn.classList.add('copied');
+                                                setTimeout(() => {
+                                                    copyBtn.textContent = '复制URL';
+                                                    copyBtn.classList.remove('copied');
+                                                }, 2000);
+                                            })
+                                            .catch(err => {
+                                                console.error('复制失败:', err);
+                                                fallbackCopyTextToClipboard(fullUrl, copyBtn);
+                                            });
+                                    } else {
+                                        // 降级方案：使用传统的方法
+                                        fallbackCopyTextToClipboard(fullUrl, copyBtn);
+                                    }
                                 };
+                                
+                                // 降级复制方法
+                                function fallbackCopyTextToClipboard(text, button) {
+                                    const textArea = document.createElement('textarea');
+                                    textArea.value = text;
+                                    
+                                    // 确保文本区域不可见
+                                    textArea.style.position = 'fixed';
+                                    textArea.style.left = '-999999px';
+                                    textArea.style.top = '-999999px';
+                                    document.body.appendChild(textArea);
+                                    
+                                    // 选择并复制文本
+                                    textArea.focus();
+                                    textArea.select();
+                                    
+                                    try {
+                                        const successful = document.execCommand('copy');
+                                        if (successful) {
+                                            button.textContent = '已复制!';
+                                            button.classList.add('copied');
+                                            setTimeout(() => {
+                                                button.textContent = '复制URL';
+                                                button.classList.remove('copied');
+                                            }, 2000);
+                                        } else {
+                                            showMessage('复制URL失败，请手动复制', 'error');
+                                        }
+                                    } catch (err) {
+                                        console.error('复制失败:', err);
+                                        showMessage('复制URL失败，请手动复制', 'error');
+                                    } finally {
+                                        document.body.removeChild(textArea);
+                                    }
+                                }
                                 filePreview.appendChild(copyBtn);
                                 
                                 fileItem.appendChild(fileInfo);
